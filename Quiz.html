@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LA CAUSE — PROTOCOLE D'ÉVALUATION</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cinzel:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d0d0d;
+      --bg2:        #111214;
+      --panel:      #141618;
+      --border:     #2a2a2e;
+      --border-lit: #4a4040;
+      --gold:       #b89a5e;
+      --gold-dim:   #7a6338;
+      --gold-glow:  rgba(184,154,94,0.12);
+      --red:        #8b2e2e;
+      --red-lit:    #c0392b;
+      --green:      #2e6b3e;
+      --green-lit:  #27ae60;
+      --text:       #c8c0b0;
+      --text-dim:   #5a5550;
+      --text-mute:  #2e2c28;
+      --mono:       'Share Tech Mono', monospace;
+      --serif:      'Cinzel', serif;
+      --sans:       'Rajdhani', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+    }
+
+    /* ── SCANLINES ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── INTRO SCREEN ── */
+    #screen-intro {
+      gap: 3rem;
+      background: radial-gradient(ellipse at center, #1a1510 0%, var(--bg) 70%);
+    }
+
+    .intro-emblem {
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .emblem-logo {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      animation: pulse-logo 4s ease-in-out infinite;
+    }
+    @keyframes pulse-logo {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(184,154,94,0.15)); opacity: 0.85; }
+      50%       { filter: drop-shadow(0 0 28px rgba(184,154,94,0.5)); opacity: 1; }
+    }
+
+    .intro-title {
+      text-align: center;
+    }
+    .intro-title .eyebrow {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .intro-title h1 {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .intro-title .subtitle {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      margin-top: 0.8rem;
+    }
+
+    .intro-divider {
+      width: 200px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .intro-doctrine {
+      font-family: var(--sans);
+      font-weight: 300;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.8;
+      letter-spacing: 0.04em;
+    }
+
+    #btn-start {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: transparent;
+      border: 1px solid var(--gold-dim);
+      padding: 1rem 3rem;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    #btn-start::before, #btn-start::after {
+      content: '';
+      position: absolute;
+      width: 6px; height: 6px;
+      border-color: var(--gold);
+      border-style: solid;
+      transition: all 0.2s;
+    }
+    #btn-start::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+    #btn-start::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+    #btn-start:hover {
+      border-color: var(--gold);
+      color: #fff;
+      box-shadow: 0 0 18px var(--gold-glow);
+    }
+
+    /* ── QUIZ SCREEN ── */
+    #screen-quiz {
+      background: var(--bg);
+      justify-content: flex-start;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    .quiz-shell {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      min-height: 100%;
+    }
+
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .quiz-header-left {
+      font-family: var(--serif);
+      font-size: 0.8rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.2em;
+    }
+    .progress-track {
+      display: flex; gap: 6px;
+    }
+    .progress-dot {
+      width: 22px; height: 3px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .progress-dot.done   { background: var(--gold-dim); }
+    .progress-dot.active { background: var(--gold); }
+
+    /* question card */
+    .question-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      position: relative;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .question-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .question-card::before {
+      content: attr(data-index);
+      position: absolute;
+      top: -1px; left: 2rem;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--bg);
+      background: var(--gold-dim);
+      padding: 0 0.5rem;
+      letter-spacing: 0.15em;
+    }
+
+    .question-label {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      color: var(--gold);
+      font-weight: 400;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    .options-list {
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .option-btn {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      width: 100%;
+    }
+    .option-btn .opt-key {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-mute);
+      flex-shrink: 0;
+      margin-top: 3px;
+      letter-spacing: 0.1em;
+    }
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--gold-dim);
+      color: var(--text);
+      background: rgba(184,154,94,0.04);
+    }
+    .option-btn.selected {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+    .option-btn.selected .opt-key { color: var(--gold-dim); }
+    .option-btn:disabled { cursor: default; }
+
+    /* revealed states */
+    .option-btn.correct  { border-color: var(--green-lit) !important; color: var(--green-lit) !important; background: rgba(39,174,96,0.06) !important; }
+    .option-btn.wrong    { border-color: var(--red-lit) !important;   color: var(--red-lit) !important;   background: rgba(192,57,43,0.06) !important; }
+
+    .verdict-line {
+      margin-top: 1rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      opacity: 0;
+      transition: opacity 0.3s;
+      height: 1rem;
+    }
+    .verdict-line.show { opacity: 1; }
+    .verdict-line.ok   { color: var(--green-lit); }
+    .verdict-line.fail { color: var(--red-lit); }
+
+    /* nav */
+    .quiz-nav {
+      display: flex;
+      justify-content: flex-end;
+    }
+    #btn-next {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--gold-dim);
+      border: none;
+      padding: 0.8rem 2.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: none;
+    }
+    #btn-next:hover  { background: var(--gold); }
+    #btn-next.show   { display: block; }
+
+    /* ── RESULT SCREENS ── */
+    #screen-success, #screen-fail {
+      gap: 2.5rem;
+      text-align: center;
+    }
+    #screen-success {
+      background: radial-gradient(ellipse at center, #0d1a0f 0%, var(--bg) 70%);
+    }
+    #screen-fail {
+      background: radial-gradient(ellipse at center, #1a0d0d 0%, var(--bg) 70%);
+    }
+
+    /* logos résultat */
+    .result-logo {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 14px rgba(39,174,96,0.35));
+      opacity: 0.9;
+    }
+    .result-logo--fail {
+      filter: drop-shadow(0 0 14px rgba(192,57,43,0.4)) grayscale(0.3) sepia(0.4) hue-rotate(-10deg);
+    }
+
+    .result-title {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 3.5vw, 2rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    #screen-success .result-title { color: var(--green-lit); }
+    #screen-fail    .result-title { color: var(--red-lit); }
+
+    .result-body {
+      font-family: var(--sans);
+      font-weight: 300;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      max-width: 440px;
+      line-height: 1.8;
+      letter-spacing: 0.04em;
+    }
+
+    /* Discord link block */
+    .discord-block {
+      display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
+    }
+    .discord-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+    .discord-link {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--gold);
+      text-decoration: none;
+      border: 1px solid var(--gold-dim);
+      padding: 0.7rem 2rem;
+      letter-spacing: 0.15em;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .discord-link:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 16px var(--gold-glow);
+    }
+
+    /* retry button */
+    #btn-retry {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 0.8rem 2.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #btn-retry:hover {
+      border-color: var(--red-lit);
+      color: var(--red-lit);
+    }
+
+    /* score line */
+    .score-line {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-mute);
+      letter-spacing: 0.2em;
+    }
+    #screen-fail .score-line { color: var(--red); }
+
+    /* music toggle */
+    #music-toggle {
+      position: fixed;
+      bottom: 1.2rem; right: 1.4rem;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--text-mute);
+      background: transparent;
+      border: 1px solid var(--text-mute);
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+      z-index: 100;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    #music-toggle:hover {
+      color: var(--gold-dim);
+      border-color: var(--gold-dim);
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUDIO -->
+<audio id="ambient" loop preload="auto">
+  <source src="Pathway_to_Nothing.mp3" type="audio/mpeg" />
+</audio>
+<audio id="gong" preload="auto">
+  <source src="gong.mp3" type="audio/mpeg" />
+</audio>
+
+<!-- MUSIC TOGGLE (always visible after start) -->
+<button id="music-toggle" style="display:none" onclick="toggleMusic()">♦ SILENCE</button>
+
+<!-- ══ SCREEN : INTRO ══ -->
+<div id="screen-intro" class="screen active">
+  <div class="intro-emblem">
+    <img class="emblem-logo" src="logo.png" alt="La Cause" />
+  </div>
+
+  <div class="intro-title">
+    <div class="eyebrow">Protocole d'évaluation — cycle I</div>
+    <h1>La Cause</h1>
+    <div class="subtitle">Niveau d'accès : inconnu — en attente de vérification</div>
+  </div>
+
+  <div class="intro-divider"></div>
+
+  <p class="intro-doctrine">
+    Six questions. Pas de tolérance.<br/>
+    Tu réponds de ta compréhension devant La Cause.<br/>
+    Le silence ne protège pas. L'hésitation non plus.
+  </p>
+
+  <button id="btn-start" onclick="startQuiz()">▶ &nbsp; Commencer l'évaluation</button>
+</div>
+
+
+<!-- ══ SCREEN : QUIZ ══ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-shell">
+
+    <div class="quiz-header">
+      <span class="quiz-header-left">LA CAUSE — ÉVALUATION</span>
+      <div class="progress-track" id="progress-track"></div>
+    </div>
+
+    <div id="question-area"></div>
+
+    <div class="quiz-nav">
+      <button id="btn-next" onclick="nextQuestion()">Continuer &nbsp;▶</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══ SCREEN : SUCCESS ══ -->
+<div id="screen-success" class="screen">
+  <img class="result-logo" src="logo.png" alt="" />
+  <div class="result-title">Accès accordé</div>
+  <p class="result-body">
+    Ta compréhension a été jugée conforme au dogme.<br/>
+    La Cause te reconnaît. Le seuil s'ouvre.
+  </p>
+  <div class="discord-block">
+    <span class="discord-label">Point de ralliement</span>
+    <a class="discord-link" href="https://discord.gg/ZT4Qak9KKy" target="_blank">
+      <em>Une porte se matérialise devant vous</em>
+    </a>
+  </div>
+  <span class="score-line" id="score-success-line"></span>
+</div>
+
+
+<!-- ══ SCREEN : FAIL ══ -->
+<div id="screen-fail" class="screen">
+  <img class="result-logo result-logo--fail" src="logo.png" alt="" />
+  <div class="result-title">Évaluation compromise</div>
+  <p class="result-body">
+    Vous ne semblez pas complètement aligné, mais tout n'est pas trop tard.<br/>
+    Ses secrets peuvent encore vous être révélés.
+  </p>
+  <span class="score-line" id="score-fail-line"></span>
+  <button id="btn-retry" onclick="retryQuiz()">↺ &nbsp; Retenter l'évaluation</button>
+</div>
+
+
+<script>
+  // ── QUESTIONS ──────────────────────────────────────────────────────────────
+  const QUESTIONS = [
+    {
+      text: "Qu'est-elle réellement ? Est-elle une organisation, une idée, une nécessité, une entité ?",
+      topic: "La nature de La Cause",
+      options: [
+        "Une nécessité",
+        "Une organisation",
+        "Une idée",
+      ],
+      correct: 0,
+    },
+    {
+      text: "Que signifie juger ? Quand intervient le jugement ? Est-il lié à la compréhension ?",
+      topic: "Le jugement",
+      options: [
+        "Le jugement est nécessaire, il mène à la compréhension.",
+        "Avant toute compréhension, il y a le jugement.",
+        "Juger c'est trahir, tout le monde mérite d'être entendu.",
+      ],
+      correct: 1,
+    },
+    {
+      text: "Qui sont les membres ?",
+      topic: "Les membres",
+      options: [
+        "Ils sont des instruments, reflet sacrifiable de son jugement.",
+        "Ce sont des soldats, ni plus, ni moins.",
+        "Des disciples qui ont compris leur place, ils sont la force de La Cause.",
+      ],
+      correct: 0,
+    },
+    {
+      text: "Pourquoi les ennemis sont-ils « réduits au silence » ? Que représente le silence dans le dogme ?",
+      topic: "Le silence",
+      options: [
+        "Nul le sait, et nul le questionne, car questionner c'est douter, et douter c'est profaner.",
+        "Car ils font trop de bruit, et le bruit gêne l'équilibre du Vers.",
+        "Parce que le silence empêche les hérétiques de répandre leurs mensonges.",
+      ],
+      correct: 0,
+    },
+    {
+      text: "Pourquoi la marche est-elle omniprésente ? Que symbolise-t-elle ?",
+      topic: "La marche",
+      options: [
+        "L'inéluctabilité.",
+        "L'avancement du groupe.",
+        "L'accumulation de richesses.",
+      ],
+      correct: 0,
+    },
+    {
+      text: "Qu'est-ce que la peur ?",
+      topic: "La peur",
+      options: [
+        "La peur est une faiblesse que seuls les indignes refusent de surmonter.",
+        "La peur est la première réponse de l'humanité face à l'inconnu.",
+        "La peur est le dernier rempart dressé avant que le jugement ne s'accomplisse.",
+      ],
+      correct: 1,
+    },
+  ];
+
+  const KEYS = ['α', 'β', 'γ'];
+
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  let current   = 0;
+  let answers   = new Array(QUESTIONS.length).fill(null);
+  let answered  = false;
+  let musicOn   = false;
+
+  // ── AUDIO ──────────────────────────────────────────────────────────────────
+  const audio = document.getElementById('ambient');
+  audio.volume = 0.35;
+
+  function toggleMusic() {
+    if (musicOn) {
+      audio.pause();
+      musicOn = false;
+      document.getElementById('music-toggle').textContent = '♦ AMBIANCE';
+    } else {
+      audio.play();
+      musicOn = true;
+      document.getElementById('music-toggle').textContent = '♦ SILENCE';
+    }
+  }
+
+  // ── SCREENS ────────────────────────────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'screen-quiz') {
+      document.getElementById('screen-quiz').scrollTop = 0;
+    }
+  }
+
+  // ── START ──────────────────────────────────────────────────────────────────
+  function startQuiz() {
+    // attempt autoplay — required user gesture happened
+    audio.play().then(() => { musicOn = true; }).catch(() => {});
+    document.getElementById('music-toggle').style.display = 'block';
+
+    current = 0;
+    answers = new Array(QUESTIONS.length).fill(null);
+    buildProgressDots();
+    renderQuestion();
+    showScreen('screen-quiz');
+  }
+
+  // ── PROGRESS DOTS ──────────────────────────────────────────────────────────
+  function buildProgressDots() {
+    const track = document.getElementById('progress-track');
+    track.innerHTML = '';
+    QUESTIONS.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'progress-dot';
+      d.id = `dot-${i}`;
+      track.appendChild(d);
+    });
+    updateDots();
+  }
+
+  function updateDots() {
+    QUESTIONS.forEach((_, i) => {
+      const d = document.getElementById(`dot-${i}`);
+      d.className = 'progress-dot';
+      if (i < current)      d.classList.add('done');
+      else if (i === current) d.classList.add('active');
+    });
+  }
+
+  // ── RENDER QUESTION ────────────────────────────────────────────────────────
+  function renderQuestion() {
+    answered = false;
+    const q   = QUESTIONS[current];
+    const area = document.getElementById('question-area');
+
+    // shuffle options display order once per render
+    const indices  = q.options.map((_, i) => i);
+    // stable shuffle seeded by question index for reproducibility
+    const shuffled = stableShuffleFor(indices, current);
+
+    area.innerHTML = `
+      <div class="question-card" id="q-card" data-index="QUESTION ${current + 1} / ${QUESTIONS.length}">
+        <div class="question-label">${q.topic} — ${q.text}</div>
+        <div class="options-list" id="options-list">
+          ${shuffled.map((optIdx, pos) => `
+            <button class="option-btn" data-opt="${optIdx}" onclick="selectOption(this)">
+              <span class="opt-key">${KEYS[pos]}</span>
+              <span>${q.options[optIdx]}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="verdict-line" id="verdict"></div>
+      </div>
+    `;
+
+    const btnNext = document.getElementById('btn-next');
+    btnNext.classList.remove('show');
+    btnNext.textContent = current < QUESTIONS.length - 1
+      ? 'Continuer ▶'
+      : 'Soumettre ▶';
+
+    // animate in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById('q-card').classList.add('visible');
+      });
+    });
+
+    updateDots();
+  }
+
+  // Deterministic shuffle per question index (Fisher-Yates with seeded RNG)
+  function stableShuffleFor(arr, seed) {
+    const a = [...arr];
+    let s = seed + 42;
+    for (let i = a.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      const j = Math.abs(s) % (i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ── SELECT OPTION ──────────────────────────────────────────────────────────
+  function selectOption(btn) {
+    if (answered) return;
+    answered = true;
+
+    // jouer le gong
+    const gong = document.getElementById('gong');
+    gong.currentTime = 0;
+    gong.play().catch(() => {});
+
+    const chosen = parseInt(btn.dataset.opt);
+    const correct = QUESTIONS[current].correct;
+    answers[current] = chosen;
+
+    // disable all — no visual feedback on correct/wrong
+    document.querySelectorAll('.option-btn').forEach(b => {
+      b.disabled = true;
+      const idx = parseInt(b.dataset.opt);
+      if (idx === chosen) b.classList.add('selected');
+    });
+
+    const verdict = document.getElementById('verdict');
+    verdict.classList.add('show');
+    verdict.textContent = '— RÉPONSE ENREGISTRÉE';
+    verdict.classList.add('ok');
+
+    document.getElementById('btn-next').classList.add('show');
+  }
+
+  // ── NEXT ───────────────────────────────────────────────────────────────────
+  function nextQuestion() {
+    if (!answered) return;
+
+    if (current < QUESTIONS.length - 1) {
+      current++;
+      renderQuestion();
+      document.getElementById('screen-quiz').scrollTop = 0;
+    } else {
+      finishQuiz();
+    }
+  }
+
+  // ── FINISH ─────────────────────────────────────────────────────────────────
+  function finishQuiz() {
+    const correct = answers.filter((a, i) => a === QUESTIONS[i].correct).length;
+    const total   = QUESTIONS.length;
+    const perfect = correct === total;
+
+    if (perfect) {
+      document.getElementById('score-success-line').textContent =
+        `SCORE : ${correct} / ${total} — CONFORMITÉ TOTALE`;
+      showScreen('screen-success');
+    } else {
+      document.getElementById('score-fail-line').textContent =
+        `SCORE : ${correct} / ${total} — INSUFFISANT`;
+      showScreen('screen-fail');
+    }
+  }
+
+  // ── RETRY ──────────────────────────────────────────────────────────────────
+  function retryQuiz() {
+    current = 0;
+    answers = new Array(QUESTIONS.length).fill(null);
+    buildProgressDots();
+    renderQuestion();
+    showScreen('screen-quiz');
+  }
+</script>
+</body>
+</html>
